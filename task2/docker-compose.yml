@@ -1,0 +1,56 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: task2-rabbitmq
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  accounting:
+    build: ./Departament
+    environment:
+      RABBIT_HOST: rabbitmq
+      DEPARTMENT_NAME: "Бухгалтерия"
+      DEPARTMENT_QUEUE: "price.accounting"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  oilbase:
+    build: ./Departament
+    environment:
+      RABBIT_HOST: rabbitmq
+      DEPARTMENT_NAME: "Нефтебаза"
+      DEPARTMENT_QUEUE: "price.oilbase"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  analytics:
+    build: ./Departament
+    environment:
+      RABBIT_HOST: rabbitmq
+      DEPARTMENT_NAME: "Аналитический отдел"
+      DEPARTMENT_QUEUE: "price.analytics"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  trading:
+    build: ./Trading
+    environment:
+      RABBIT_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      accounting:
+        condition: service_started
+      oilbase:
+        condition: service_started
+      analytics:
+        condition: service_started
