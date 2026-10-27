@@ -1,0 +1,47 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: task1-rabbitmq
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  dispatcher:
+    build: ./Dispatcher
+    environment:
+      RABBIT_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  crew-1:
+    build: ./RepairCrew
+    environment:
+      RABBIT_HOST: rabbitmq
+      CREW_NAME: "Бригада-1"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  crew-2:
+    build: ./RepairCrew
+    environment:
+      RABBIT_HOST: rabbitmq
+      CREW_NAME: "Бригада-2"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  crew-3:
+    build: ./RepairCrew
+    environment:
+      RABBIT_HOST: rabbitmq
+      CREW_NAME: "Бригада-3"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
