@@ -1,0 +1,92 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: practice2-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # management UI (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  aggregator:
+    build:
+      context: .
+      args:
+        PROJECT: Aggregator
+    environment:
+      RABBIT_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  executor-drilling:
+    build:
+      context: .
+      args:
+        PROJECT: Executor
+    environment:
+      RABBIT_HOST: rabbitmq
+      WORK_TYPE: drilling
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  executor-electrical:
+    build:
+      context: .
+      args:
+        PROJECT: Executor
+    environment:
+      RABBIT_HOST: rabbitmq
+      WORK_TYPE: electrical
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  executor-logistics:
+    build:
+      context: .
+      args:
+        PROJECT: Executor
+    environment:
+      RABBIT_HOST: rabbitmq
+      WORK_TYPE: logistics
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  router:
+    build:
+      context: .
+      args:
+        PROJECT: Router
+    environment:
+      RABBIT_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  splitter:
+    build:
+      context: .
+      args:
+        PROJECT: Splitter
+    environment:
+      RABBIT_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  initiator:
+    build:
+      context: .
+      args:
+        PROJECT: Initiator
+    environment:
+      RABBIT_HOST: rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
